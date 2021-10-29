@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+    <head>
+        <meta charset="utf-8">
+        <title>Bingo Game</title>
+        <style media="screen">
+                body {
+                    zoom: 1.5;
+                }
+                .active {
+                    background: green;
+                    color: white;
+                }
+                tr:hover {
+                    cursor: pointer;
+                }
+
+        </style>
+    </head>
+    <body>
+        Score: <span class="bingo-scores">
+    </span>
+        <div class="bingo-nums">
+
+        </div>
+        <div class="bingo">
+
+        </div>
+
+        <script type="text/javascript">
+            class Bingo {
+                constructor(settings = {}) {
+                    this.bingo = []
+                    this.interval
+                    this.maxNumber = settings.maxNumber || 90
+                    this.score = this.maxNumber
+                    this.rowSize = settings.rowSize || 5
+                    this.colSize = settings.colSize || 5
+                    this.intervalTimer = settings.intervalTimer || 1000
+                    this.createBingoTable()
+                }
+
+                createBingoTable() {
+                    var bingoElement = document.querySelector(".bingo")
+                    var startTag = "<table border='1'><tbody>"
+                    var insideTag =  ""
+                    var endTag = "</tbody></table>"
+                    var buttonTag = "<button class='confirm'>BINGO!</button>"
+                    for(let row = 0; row < this.rowSize; row++) {
+                        insideTag += "<tr>"
+                        for(let col = 0; col < this.colSize; col++) {
+                            insideTag += `<td class = "index-${col + (this.colSize * row)}"> ${this.random(1, this.maxNumber)} </td>`
+
+                        }
+                        insideTag += "</tr>"
+                    }
+
+                    bingoElement.innerHTML = startTag + insideTag + endTag + buttonTag
+                    this.addButtonEvent()
+                    this.addCellEvent()
+                    this.showScore()
+                    this.addInterval()
+                }
+
+                // min(include) but max(exclude) need ++ to be max(include)
+            random(min, max) {
+                return Math.floor(Math.random() * (++max - min) + min)
+            }
+
+            addCellEvent() {
+                for(let i = 0; i < this.rowSize * this.colSize; i++) {
+                    document.querySelector(`.index-${i}`).addEventListener("click", (event) => {
+                        event.srcElement.classList.toggle("active")
+                        //  boolean ? return when true : return when false
+                        //  event.srcElement.style.background = 'green' ? event.srcElement.style.background = 'white' : event.srcElement.style.background = 'green'
+                        // if(event.srcElement.style.background = 'green') {
+                        //  event.srcElement.style.background = 'white'
+                        //  else {
+                        //      event.srcElement.style.background = 'green'
+                        //  }
+                        //
+                        // }
+
+                    })
+                }
+            }
+                addInterval() {
+                    this.interval = setInterval(() => {
+                            let randomed = this.random(1, this.maxNumber)
+                            while(this.bingo.includes(randomed)) {
+                                randomed = this.random(1, this.maxNumber)
+                            }
+                            this.bingo.push(randomed)
+                            if(this.bingo.length >= this.maxNumber) {
+                                clearInterval(this.interval)
+                            }
+                            this.score --
+                            this.showScore()
+                            this.showInterval()
+                            console.log(this.bingo, this.bingo.length)
+
+                    }, this.intervalTimer);
+
+                }
+
+                showInterval() {
+                    document.querySelector('.bingo-nums').innerHTML = this.bingo.join(", ")
+                }
+
+                showScore() {
+                    document.querySelector('.bingo-scores').innerHTML = this.score
+                }
+
+                addButtonEvent() {
+                    document.querySelector(".bingo .confirm").addEventListener('click', () => {
+                        this.checkBingo()
+                        this.showScore()
+                    })
+                }
+                checkBingo() {
+                    var forpatterns = false
+                    var forBingo = true
+                    for(let value of this.getActiveFromBingo()[0] ) {
+                        // console.log(this.bingo, value, this.bingo.includes(parseInt(value)))
+                            if(!this.bingo.includes(parseInt(value))) {
+                                forBingo = false
+                            }
+                    }
+                            for(let pattern of this.createPatterns() ) {
+                                let count = 0
+                                for(let value of pattern) {
+                                    if(this.getActiveFromBingo()[1].includes(value)) {
+                                        count++  //4
+                                    }
+                                }
+                                if(pattern.length <= count) { //5 <= 5 //5 <= 4
+                                    forpatterns = true
+                                }
+                            }
+                            if (forBingo && forpatterns) {
+                                this.win()
+                            }
+                            else {
+                                this.score -= 5
+                            }
+                }
+                win() {
+                    document.querySelector('.bingo').innerHTML = 'Your scores : ' + this.score
+                }
+
+                createPatterns() {
+                    var patterns = []
+                    for(let row = 0; row < this.rowSize; row++) {
+                        let rowValue = []
+                        for(let col = 0; col < this.colSize; col++) {
+                                rowValue.push(col + (this.colSize * row))
+                        }
+                        patterns.push(rowValue)
+                    }
+                    for(let col = 0; col < this.colSize; col++) {
+                        let colValue = []
+                        for(let row = 0; row < this.rowSize; row++) {
+                            colValue.push(col + (this.colSize * row))
+                        }
+                        patterns.push(colValue)
+                    }
+                    return patterns
+                }
+
+
+                getActiveFromBingo() {
+                    var value = [[]]
+                    var index = [[]]
+                    for(let i = 0; i < this.rowSize * this.colSize; i++) {
+                        let query = document.querySelector(`.index-${i}`)
+                        if(query.classList.contains('active')) {
+                        value[0].push(query.innerText)
+                        index[0].push(i)
+                    }
+                    }
+                    return value.concat(index)
+                }
+
+        }
+
+
+            new Bingo({
+                rowSize:5 ,
+                colSize: 5,
+                maxNumber: 25,
+                intervalTimer: 1000
+            })
+        </script>
+    </body>
+</html>
